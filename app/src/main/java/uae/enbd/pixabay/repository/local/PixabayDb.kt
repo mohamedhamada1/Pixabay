@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package uae.enbd.pixabay.utils
+package uae.enbd.pixabay.repository.local
 
-import android.graphics.drawable.Drawable
-import androidx.databinding.BindingAdapter
-import android.view.View
-import android.widget.ImageView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestListener
+
+import androidx.room.Database
+import androidx.room.RoomDatabase
+
+import uae.enbd.pixabay.models.Hit
 
 /**
- * Data Binding adapters specific to the app.
+ * Main database description.
  */
-object BindingAdapters {
-    @JvmStatic
-    @BindingAdapter("visibleGone")
-    fun showHide(view: View, show: Boolean) {
-        view.visibility = if (show) View.VISIBLE else View.GONE
-    }
-
-
+@Database(
+    entities = [Hit::class],
+    version = 5,
+    exportSchema = false
+)
+abstract class PixabayDb : RoomDatabase() {
+    abstract fun hitDao(): HitDao
 }

@@ -8,15 +8,18 @@ import retrofit2.Callback
 import retrofit2.Response
 import uae.enbd.pixabay.models.Hit
 import uae.enbd.pixabay.models.PixabaySearchResponse
+import uae.enbd.pixabay.repository.AppExecutors
 import uae.enbd.pixabay.repository.Status
 import uae.enbd.pixabay.repository.api.PixabayService
+import uae.enbd.pixabay.repository.local.HitDao
 import uae.enbd.pixabay.utils.StatusAndError
+import java.util.concurrent.Executors
 
 class PhotoSearchDataSource constructor(
-    private val pixabayService: PixabayService,
-    var query: String? = null
+    private val pixabayService: PixabayService, var query: String? = null, private val hitDao: HitDao
 ) : PageKeyedDataSource<Int, Hit>() {
 
+    private val executor = Executors.newSingleThreadExecutor()
 
     var state: MutableLiveData<StatusAndError> = MutableLiveData()
     val FIRST_PAGE_INDEX = 1
@@ -62,6 +65,17 @@ class PhotoSearchDataSource constructor(
 
                     val listing = response.body()?.hits
                     onResult(listing ?: listOf())
+                    executor.execute {
+                        listing?.let {
+                            listing.forEach {
+                                it.query = query
+                                it.pageIndex = page
+                            }
+                            hitDao.insert(listing)
+                        }
+                    }
+
+
                 }
 
                 override fun onFailure(call: Call<PixabaySearchResponse>, t: Throwable) {

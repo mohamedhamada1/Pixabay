@@ -1,7 +1,6 @@
 package uae.enbd.pixabay.ui.search
 
 import android.os.Bundle
-import android.os.Handler
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -9,11 +8,11 @@ import androidx.databinding.DataBindingComponent
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.search_fragment.*
-import kotlinx.android.synthetic.main.widget_error_view_retry.view.*
 import uae.enbd.pixabay.BuildConfig
 import uae.enbd.pixabay.R
 import uae.enbd.pixabay.databinding.SearchFragmentBinding
@@ -21,6 +20,7 @@ import uae.enbd.pixabay.di.Injectable
 import uae.enbd.pixabay.repository.AppExecutors
 import uae.enbd.pixabay.repository.Status
 import uae.enbd.pixabay.ui.base.BaseFragment
+import uae.enbd.pixabay.ui.details.DetailsFragmentArgs
 import uae.enbd.pixabay.utils.FragmentDataBindingComponent
 import uae.enbd.pixabay.utils.isNetworkAvailable
 import javax.inject.Inject
@@ -33,7 +33,6 @@ class SearchFragment : BaseFragment<SearchFragmentBinding, SearchViewModel>(), I
 
     @Inject
     lateinit var appExecutors: AppExecutors
-
 
     var dataBindingComponent: DataBindingComponent = FragmentDataBindingComponent(this)
 
@@ -49,27 +48,17 @@ class SearchFragment : BaseFragment<SearchFragmentBinding, SearchViewModel>(), I
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (viewModel.listIsEmpty()) {
+            input.setText("apple")
+            doSearch()
+        }
         initAdapter()
         initSearchInputListener()
-        viewModel.getState().observe(viewLifecycleOwner, Observer { state ->
-            viewDataBinding?.let {
-                it.loadingStatus = state.status
-                if (state.status == Status.ERROR) {
-                    emptyView.visibility = View.GONE
-                    if (isNetworkAvailable())
-                        it.errorMessage = getString(R.string.something_w_desc)
-                    else
-                        it.errorMessage = getString(R.string.No_internet)
-
-                } else if (state.status == Status.SUCCESS) {
-                    emptyView.visibility = if (viewModel.listIsEmpty()) View.VISIBLE else View.GONE
-                }
-            }
-        })
+        getState()
         pullToRefresh()
-        retryHandling()
 
     }
+
 
     private fun doSearch() = viewDataBinding.apply {
         // Dismiss keyboard
@@ -79,19 +68,23 @@ class SearchFragment : BaseFragment<SearchFragmentBinding, SearchViewModel>(), I
 
     private fun initAdapter() = viewDataBinding.apply {
         if (adapter == null) {
-            viewModel.setupPaging()
             initRecyclerView()
             if (adapter == null)
                 adapter = HitsAdapter(
                     dataBindingComponent,
                     appExecutors
                 ) { item ->
+                    findNavController().navigate(
+                        SearchFragmentDirections.actionSearchFragmentToDetailsFragment(item)
+                    )
                 }
 
             RVHits.adapter = adapter
-            viewModel.hitList?.observe(viewLifecycleOwner, Observer { result ->
+            viewModel.loadData.observe(viewLifecycleOwner, Observer { result ->
                 adapter?.submitList(result)
                 swipToRefresh?.isRefreshing = false
+
+
             })
 
         } else {
@@ -106,9 +99,24 @@ class SearchFragment : BaseFragment<SearchFragmentBinding, SearchViewModel>(), I
 
     private fun pullToRefresh() = viewDataBinding?.swipToRefresh?.apply {
         setOnRefreshListener {
-            viewModel.invalide()
+            viewModel.invalidate()
         }
 
+    }
+
+    private fun getState() {
+        viewModel.getState().observe(viewLifecycleOwner, Observer { state ->
+            viewDataBinding?.let {
+                it.loadingStatus = state.status
+                if (state.status == Status.ERROR) {
+                    viewModel.changeLiveData(false)
+                    viewModel.invalidate()
+                } else if (state.status == Status.SUCCESS) {
+                    emptyView.visibility =
+                        if (adapter?.itemCount ?: 0 > 0) View.GONE else View.VISIBLE
+                }
+            }
+        })
     }
 
     // handle keybad click
@@ -135,9 +143,4 @@ class SearchFragment : BaseFragment<SearchFragmentBinding, SearchViewModel>(), I
 
     }
 
-    private fun retryHandling() = viewDataBinding.apply {
-        errorView.retryBtn.setOnClickListener {
-            viewModel.invalide()
-        }
-    }
 }

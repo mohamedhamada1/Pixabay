@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelProvider
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
+import uae.enbd.pixabay.ui.details.DetailsViewModel
 import uae.enbd.pixabay.ui.search.SearchViewModel
 
 
@@ -30,10 +31,16 @@ import uae.enbd.pixabay.ui.search.SearchViewModel
 @Module
 abstract class ViewModelModule {
 
-   @Binds
-   @IntoMap
-   @ViewModelKey(SearchViewModel::class)
-   abstract fun bindSearchViewModel(repoViewModel: SearchViewModel): ViewModel
+    @Binds
+    @IntoMap
+    @ViewModelKey(SearchViewModel::class)
+    abstract fun bindSearchViewModel(repoViewModel: SearchViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(DetailsViewModel::class)
+    abstract fun bindDetailsViewModel(repoViewModel: DetailsViewModel): ViewModel
+
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelProviderFactory): ViewModelProvider.Factory
 }

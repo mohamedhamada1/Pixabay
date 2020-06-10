@@ -15,12 +15,14 @@
  */
 
 package uae.enbd.pixabay.ui.base
+
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import androidx.databinding.DataBindingComponent
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
@@ -28,15 +30,13 @@ import androidx.lifecycle.ViewModel
 import dagger.android.support.AndroidSupportInjection
 
 
-
-abstract class BaseFragment<T : ViewDataBinding, V : ViewModel> : Fragment(){
+abstract class BaseFragment<T : ViewDataBinding, V : ViewModel> : Fragment() {
 
     var baseActivity: BaseActivity<*, *>? = null
         private set
     var viewDataBinding: T? = null
         private set
     private var mRootView: View? = null
-
 
 
     /**
@@ -46,8 +46,12 @@ abstract class BaseFragment<T : ViewDataBinding, V : ViewModel> : Fragment(){
     abstract val layoutId: Int
 
 
+    open  fun getBindingComponent(): DataBindingComponent? {
+        return null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-       // performDependencyInjection() // we are doing injection by implement Injectable interface
+        // performDependencyInjection() // we are doing injection by implement Injectable interface
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(false)
     }
@@ -57,7 +61,8 @@ abstract class BaseFragment<T : ViewDataBinding, V : ViewModel> : Fragment(){
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewDataBinding = DataBindingUtil.inflate(inflater, layoutId, container, false)
+        viewDataBinding =
+            DataBindingUtil.inflate(inflater, layoutId, container, false, getBindingComponent())
         mRootView = viewDataBinding!!.root
         return mRootView
     }
@@ -82,7 +87,7 @@ abstract class BaseFragment<T : ViewDataBinding, V : ViewModel> : Fragment(){
     }
 
     fun performDependencyInjection() {
-       AndroidSupportInjection.inject(this)
+        AndroidSupportInjection.inject(this)
     }
 
 

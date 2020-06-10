@@ -10,4 +10,6 @@
     </string>
     <string name="retry">retry</string>
     <string name="No_internet">No internet connection</string>
+    <string name="Likes">Likes %s</string>
+    <string name="Comments">Comments %s</string>
 </resources>

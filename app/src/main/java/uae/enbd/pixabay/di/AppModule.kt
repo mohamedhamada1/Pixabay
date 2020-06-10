@@ -17,12 +17,16 @@
 package uae.enbd.pixabay.di
 
 
+import android.app.Application
+import androidx.room.Room
 import dagger.Module
 import dagger.Provides
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import uae.enbd.pixabay.BuildConfig
 import uae.enbd.pixabay.repository.api.PixabayService
+import uae.enbd.pixabay.repository.local.HitDao
+import uae.enbd.pixabay.repository.local.PixabayDb
 import javax.inject.Singleton
 
 @Module(includes = [ViewModelModule::class])
@@ -36,6 +40,21 @@ class AppModule {
             .addCallAdapterFactory(LiveDataCallAdapterFactory())
             .build()
             .create(PixabayService::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideDb(app: Application): PixabayDb {
+        return Room
+            .databaseBuilder(app, PixabayDb::class.java, "pixabay.db")
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Singleton
+    @Provides
+    fun provideUserDao(db: PixabayDb): HitDao {
+        return db.hitDao()
     }
 
 

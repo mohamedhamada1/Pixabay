@@ -16,17 +16,17 @@
 
 package uae.enbd.pixabay.di
 
-
-
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
+import uae.enbd.pixabay.ui.details.DetailsFragment
 import uae.enbd.pixabay.ui.search.SearchFragment
 
 @Suppress("unused")
 @Module
 abstract class FragmentBuildersModule {
-  @ContributesAndroidInjector
+    @ContributesAndroidInjector
     abstract fun contributeSearchFragment(): SearchFragment
 
-
+    @ContributesAndroidInjector
+    abstract fun contributeDetailsFragment(): DetailsFragment
 }
