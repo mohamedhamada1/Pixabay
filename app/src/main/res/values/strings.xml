@@ -3,4 +3,11 @@
     <string name="search">Search</string>
     <string name="NoSearchResult">No result</string>
     <string name="NoSearchResultDesc">No search result</string>
+    <string name="something_w">something went wrong</string>
+    <string name="something_w_desc">
+
+        We\'re not really sure what happened. Please Refresh and try again.
+    </string>
+    <string name="retry">retry</string>
+    <string name="No_internet">No internet connection</string>
 </resources>

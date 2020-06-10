@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.search_fragment.*
+import kotlinx.android.synthetic.main.widget_error_view_retry.view.*
 import uae.enbd.pixabay.BuildConfig
 import uae.enbd.pixabay.R
 import uae.enbd.pixabay.databinding.SearchFragmentBinding
@@ -21,6 +22,7 @@ import uae.enbd.pixabay.repository.AppExecutors
 import uae.enbd.pixabay.repository.Status
 import uae.enbd.pixabay.ui.base.BaseFragment
 import uae.enbd.pixabay.utils.FragmentDataBindingComponent
+import uae.enbd.pixabay.utils.isNetworkAvailable
 import javax.inject.Inject
 
 
@@ -52,14 +54,20 @@ class SearchFragment : BaseFragment<SearchFragmentBinding, SearchViewModel>(), I
         viewModel.getState().observe(viewLifecycleOwner, Observer { state ->
             viewDataBinding?.let {
                 it.loadingStatus = state.status
-            }
-            if (state.status == Status.ERROR) {
+                if (state.status == Status.ERROR) {
+                    emptyView.visibility = View.GONE
+                    if (isNetworkAvailable())
+                        it.errorMessage = getString(R.string.something_w_desc)
+                    else
+                        it.errorMessage = getString(R.string.No_internet)
 
-            } else if (state.status == Status.SUCCESS) {
-                emptyView.visibility = if (viewModel.listIsEmpty()) View.VISIBLE else View.GONE
+                } else if (state.status == Status.SUCCESS) {
+                    emptyView.visibility = if (viewModel.listIsEmpty()) View.VISIBLE else View.GONE
+                }
             }
         })
         pullToRefresh()
+        retryHandling()
 
     }
 
@@ -123,6 +131,13 @@ class SearchFragment : BaseFragment<SearchFragmentBinding, SearchViewModel>(), I
         }
         btbDone.setOnClickListener {
             doSearch()
+        }
+
+    }
+
+    private fun retryHandling() = viewDataBinding.apply {
+        errorView.retryBtn.setOnClickListener {
+            viewModel.invalide()
         }
     }
 }
